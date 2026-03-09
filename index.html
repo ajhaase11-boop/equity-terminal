@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equity Research Terminal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg1:#0a0e1a;--bg2:#0d1420;--bg3:#060a12;--bg4:#0f1e30;--blue:#2563eb;--lblue:#7eb8f7;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;--gray:#4a6580;--text:#c9d1e0;--border:#1a2640;--alt:#111827}
+body{font-family:'IBM Plex Mono','Courier New',monospace;background:var(--bg1);color:var(--text);min-height:100vh}
+#topbar{background:var(--bg3);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--blue)}
+#search-bar{padding:24px 28px 18px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.search-hint{margin-bottom:8px;font-size:10px;color:var(--gray);letter-spacing:0.12em;text-transform:uppercase}
+.search-row{display:flex;max-width:520px}
+.search-prefix{background:var(--bg2);border:1px solid var(--border);border-right:none;padding:12px 14px;display:flex;align-items:center;font-size:16px;font-weight:600;color:#253555}
+#ticker-input{background:var(--bg2);border:1px solid var(--border);border-right:none;color:var(--lblue);font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;letter-spacing:0.1em;padding:12px 18px;outline:none;width:200px;text-transform:uppercase}
+#ticker-input:focus{border-color:var(--blue)}
+#analyze-btn{background:var(--blue);border:none;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;padding:12px 22px;cursor:pointer;text-transform:uppercase}
+#analyze-btn:disabled{background:var(--bg2);color:var(--gray);cursor:default}
+#status{margin-top:10px;font-size:11px;letter-spacing:0.08em}
+.sl{color:var(--blue);animation:pulse 1.5s ease-in-out infinite}.se{color:var(--red)}
+.quick-tickers{margin-top:12px;font-size:10px;color:#1e3050}
+.quick-tickers span{cursor:pointer;color:#1e3560;margin-right:12px}
+.quick-tickers span:hover{color:var(--lblue)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+#company-header{padding:18px 28px;border-bottom:1px solid var(--border);background:#080c16;display:none;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.ticker-big{font-size:26px;font-weight:600;color:#fff}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600}
+.price-big{font-size:24px;font-weight:600;color:#fff}
+.price-sub{font-size:11px;color:var(--gray);margin-top:2px}
+.rating-badge{display:inline-block;padding:3px 10px;border-radius:3px;font-size:10px;font-weight:700;margin-top:8px}
+#tabs{border-bottom:1px solid var(--border);overflow-x:auto;display:none;background:var(--bg3)}
+.tab{background:none;border:none;cursor:pointer;padding:10px 18px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray);border-bottom:2px solid transparent;white-space:nowrap}
+.tab.active{color:var(--lblue);border-bottom-color:var(--blue)}
+#content{padding:24px 28px;max-width:1200px;display:none}
+.section-panel{display:none}.section-panel.active{display:block}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:16px;overflow:hidden}
+.card-title{padding:12px 20px;border-bottom:1px solid var(--border);font-size:10px;color:var(--gray);letter-spacing:0.15em;text-transform:uppercase}
+.card-body{padding:20px}.card-nop .card-body{padding:0}
+.kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--alt);font-size:12px}
+.kv-k{color:var(--gray)}.kv-v{color:var(--text);font-weight:500}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:16px}
+.stat-label{font-size:9px;color:var(--gray);letter-spacing:0.12em;text-transform:uppercase}
+.stat-value{font-size:16px;color:#fff;font-weight:600;margin-top:5px}
+.tbl-wrap{overflow-x:auto}
+table.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt th{background:var(--bg3);color:var(--gray);font-weight:500;padding:8px 14px;text-align:center;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap}
+.dt th:first-child{text-align:left}
+.dt td{padding:7px 14px;text-align:center;border-bottom:1px solid var(--alt);color:var(--text);white-space:nowrap}
+.dt td:first-child{text-align:left;color:var(--lblue)}
+.dt tr.sr td{background:var(--bg4);font-weight:600;color:#fff}
+.geo-grid{display:flex;gap:20px;flex-wrap:wrap}
+.geo-item{min-width:130px;margin-bottom:10px}
+.geo-hdr{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.geo-bg{height:5px;background:var(--border);border-radius:3px}
+.geo-fill{height:5px;background:var(--blue);border-radius:3px}
+.case-box{border-radius:6px;padding:18px}
+.prod-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--alt);font-size:12px}
+.dev-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--alt);font-size:12px}
+.risk-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--alt);align-items:flex-start}
+.sev{font-size:9px;padding:2px 6px;border-radius:2px;font-weight:700;white-space:nowrap;margin-top:2px}
+.st{border-collapse:collapse;font-size:11px}
+.st th,.st td{padding:6px 12px;text-align:center;border:1px solid var(--border)}
+.st th{background:var(--bg3);color:var(--gray);font-size:10px;font-weight:500}
+.su{color:var(--green);font-weight:600}.sd{color:var(--red);font-weight:600}
+.cbox{flex:1;text-align:center;padding:10px 4px;background:var(--bg1);border-radius:4px}
+.cnum{font-size:18px;font-weight:700}.clbl{font-size:10px;color:var(--gray)}
+#empty-state{padding:80px 28px;text-align:center;color:#1e3050}
+#api-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999;align-items:center;justify-content:center}
+#api-modal.show{display:flex}
+.mbox{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:32px;max-width:480px;width:90%}
+.mt{font-size:14px;color:#fff;font-weight:600;margin-bottom:8px}
+.ms{font-size:11px;color:var(--gray);margin-bottom:20px;line-height:1.7}
+.mi{width:100%;background:var(--bg1);border:1px solid var(--border);color:var(--lblue);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:12px 14px;outline:none;margin-bottom:12px}
+.mb{background:var(--blue);border:none;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;padding:12px 20px;cursor:pointer;text-transform:uppercase;width:100%}
+.mn{font-size:10px;color:#253555;margin-top:10px;line-height:1.6}
+.mn a{color:var(--gray)}
+</style>
+</head>
+<body>
+<div id="api-modal">
+  <div class="mbox">
+    <div class="mt">Anthropic API Key Required</div>
+    <div class="ms">Enter your key to generate equity research profiles. Stored in browser session only.</div>
+    <input id="api-key-input" class="mi" type="password" placeholder="sk-ant-api03-..." />
+    <button class="mb" onclick="saveKey()">SAVE KEY AND CONTINUE</button>
+    <div class="mn">Get a key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+  </div>
+</div>
+<div id="topbar">
+  <div style="display:flex;align-items:center"><div class="dot"></div><span style="font-size:10px;letter-spacing:0.2em;color:var(--gray);text-transform:uppercase;margin-left:10px">Equity Research Terminal</span></div>
+  <button onclick="document.getElementById('api-modal').classList.add('show')" style="background:none;border:1px solid var(--border);color:var(--gray);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 8px;cursor:pointer">API KEY</button>
+</div>
+<div id="search-bar">
+  <div class="search-hint">Enter Ticker Symbol</div>
+  <div class="search-row">
+    <div class="search-prefix">$</div>
+    <input id="ticker-input" placeholder="e.g. AAPL" maxlength="10" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')go()" />
+    <button id="analyze-btn" onclick="go()">ANALYZE</button>
+  </div>
+  <div id="status"></div>
+  <div class="quick-tickers">Try: <span onclick="st('AAPL')">AAPL</span><span onclick="st('NVDA')">NVDA</span><span onclick="st('JPM')">JPM</span><span onclick="st('MSFT')">MSFT</span><span onclick="st('TSLA')">TSLA</span></div>
+</div>
+<div id="empty-state"><p style="font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:#253555">Full equity research profile in ~30 seconds</p></div>
+<div id="company-header">
+  <div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span class="ticker-big" id="h-ticker"></span><span style="font-size:15px;color:#a0b0c0" id="h-name"></span></div><div class="tags" id="h-tags"></div></div>
+  <div style="text-align:right"><div class="price-big" id="h-price"></div><div class="price-sub" id="h-ev"></div><div id="h-rating"></div></div>
+</div>
+<div id="tabs">
+  <button class="tab active" data-tab="overview">Overview</button>
+  <button class="tab" data-tab="financials">Financials</button>
+  <button class="tab" data-tab="valuation">Valuation</button>
+  <button class="tab" data-tab="comparables">Comps</button>
+  <button class="tab" data-tab="dcf">DCF</button>
+  <button class="tab" data-tab="risks">Risks</button>
+  <button class="tab" data-tab="analyst">Analyst</button>
+</div>
+<div id="content">
+  <div class="section-panel active" id="panel-overview"></div>
+  <div class="section-panel" id="panel-financials"></div>
+  <div class="section-panel" id="panel-valuation"></div>
+  <div class="section-panel" id="panel-comparables"></div>
+  <div class="section-panel" id="panel-dcf"></div>
+  <div class="section-panel" id="panel-risks"></div>
+  <div class="section-panel" id="panel-analyst"></div>
+</div>
+<script>
+const PROXY="https://morning-forest-4c14.ajhaase11.workers.dev/proxy";
+const SP="You are a senior equity research analyst. When given a ticker, return ONLY valid JSON (no markdown, no code blocks, just raw JSON) with this exact schema: {\"ticker\":\"\",\"companyName\":\"\",\"sector\":\"\",\"industry\":\"\",\"exchange\":\"\",\"overview\":{\"description\":\"\",\"businessModel\":\"\",\"keyProducts\":[],\"geographicExposure\":{},\"employees\":\"\",\"headquarters\":\"\",\"founded\":\"\",\"ceo\":\"\",\"moat\":\"\"},\"financials\":{\"incomeStatement\":{\"headers\":[\"Metric\",\"FY2021\",\"FY2022\",\"FY2023\",\"FY2024\",\"FY2025E\"],\"rows\":[]},\"balanceSheet\":{\"headers\":[\"Metric\",\"FY2022\",\"FY2023\",\"FY2024\"],\"rows\":[]},\"cashFlow\":{\"headers\":[\"Metric\",\"FY2022\",\"FY2023\",\"FY2024\"],\"rows\":[]}},\"valuation\":{\"currentPrice\":\"\",\"marketCap\":\"\",\"enterpriseValue\":\"\",\"fiftyTwoWeekRange\":\"\",\"beta\":\"\",\"dividendYield\":\"\",\"metrics\":{\"headers\":[\"Multiple\",\"Current\",\"1Y Avg\",\"3Y Avg\",\"Sector Avg\"],\"rows\":[]}},\"comparables\":{\"description\":\"\",\"headers\":[],\"peers\":[],\"impliedPriceRange\":{\"low\":\"\",\"mid\":\"\",\"high\":\"\"}},\"dcf\":{\"assumptions\":{\"wacc\":\"\",\"terminalGrowthRate\":\"\",\"projectionYears\":\"5\",\"taxRate\":\"\",\"baseRevenue\":\"\",\"revenueGrowthRates\":[],\"ebitdaMargins\":[]},\"output\":{\"headers\":[],\"rows\":[]},\"summary\":{\"pvOfFCFs\":\"\",\"terminalValue\":\"\",\"pvOfTerminalValue\":\"\",\"enterpriseValue\":\"\",\"netDebt\":\"\",\"equityValue\":\"\",\"sharesOutstanding\":\"\",\"impliedSharePrice\":\"\",\"currentPrice\":\"\",\"upsideDownside\":\"\"},\"sensitivityTable\":{\"waccRates\":[],\"tgrRates\":[],\"matrix\":[[]]}},\"risks\":{\"bullCase\":{\"priceTarget\":\"\",\"upside\":\"\",\"catalysts\":[]},\"baseCase\":{\"priceTarget\":\"\",\"upside\":\"\",\"rationale\":\"\"},\"bearCase\":{\"priceTarget\":\"\",\"downside\":\"\",\"risks\":[]},\"keyRisks\":[{\"category\":\"\",\"risk\":\"\",\"severity\":\"\"}]},\"analyst\":{\"rating\":\"\",\"priceTarget\":\"\",\"impliedUpside\":\"\",\"investmentThesis\":\"\",\"keyMetricsToWatch\":[],\"catalysts\":[],\"consensusRatings\":{\"buy\":\"\",\"hold\":\"\",\"sell\":\"\"},\"consensusPriceTarget\":\"\",\"recentDevelopments\":[]}} Fill every field with real researched data. Return ONLY the JSON object, nothing else.";
+let apiKey="";
+const steps=["Pulling SEC filings...","Fetching market data...","Running comps analysis...","Building DCF model...","Synthesizing research..."];
+function saveKey(){const k=document.getElementById("api-key-input").value.trim();if(!k.startsWith("sk-")){alert("Enter a valid key");return;}apiKey=k;document.getElementById("api-modal").classList.remove("show");}
+function st(t){document.getElementById("ticker-input").value=t;}
+function setStatus(m,c=""){const el=document.getElementById("status");el.textContent=m?"> "+m:"";el.className=c;}
+function rc(r){if(!r)return"#64748b";const l=r.toLowerCase();return l.includes("buy")||l.includes("outperform")?"#10b981":l.includes("sell")||l.includes("under")?"#ef4444":"#f59e0b";}
+function sc(s){if(!s)return"#64748b";return s.toLowerCase()==="high"?"#ef4444":s.toLowerCase()==="medium"?"#f59e0b":"#10b981";}
+function tbl(headers,rows){const last=rows.length-2;return "<div class='tbl-wrap'><table class='dt'><thead><tr>"+headers.map(h=>"<th>"+h+"</th>").join("")+"</tr></thead><tbody>"+rows.map((row,ri)=>"<tr class='"+(ri>=last?"sr":"")+"'>"+row.map(c=>"<td>"+(c||"-")+"</td>").join("")+"</tr>").join("")+"</tbody></table></div>";}
+async function go(){
+  const ticker=document.getElementById("ticker-input").value.trim().toUpperCase();
+  if(!ticker)return;
+  if(!apiKey){document.getElementById("api-modal").classList.add("show");return;}
+  const btn=document.getElementById("analyze-btn");
+  btn.disabled=true;btn.textContent="LOADING...";
+  ["company-header","tabs","content"].forEach(id=>document.getElementById(id).style.display="none");
+  document.getElementById("empty-state").style.display="none";
+  let si=0;setStatus(steps[0],"sl");
+  const iv=setInterval(()=>{if(si<steps.length-1)setStatus(steps[++si],"sl");},2200);
+  try{
+    const res=await fetch(PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({apiKey,model:"claude-sonnet-4-5",max_tokens:8000,system:SP,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"Generate complete equity research profile for: "+ticker+". Search for current price, recent earnings, financials. Return ONLY raw JSON, no markdown."}]})});
+    if(!res.ok)throw new Error("API error "+res.status+": "+await res.text());
+    clearInterval(iv);
+    const raw=await res.json();
+    const text=(raw.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+    const m=text.replace(/[\u0060]{3}json/g,"").replace(/[\u0060]{3}/g,"").match(/\{[\s\S]*\}/);
+    if(!m)throw new Error("Could not parse response. Try again.");
+    setStatus("");render(JSON.parse(m[0]));
+  }catch(e){clearInterval(iv);setStatus(e.message,"se");document.getElementById("empty-state").style.display="block";}
+  finally{btn.disabled=false;btn.textContent="ANALYZE";}
+}
+function render(d){
+  const ov=d.overview||{},fin=d.financials||{},val=d.valuation||{},comps=d.comparables||{},dcf=d.dcf||{},risks=d.risks||{},a=d.analyst||{};
+  const rclr=rc(a.rating||"");
+  document.getElementById("h-ticker").textContent=d.ticker||"";
+  document.getElementById("h-name").textContent=d.companyName||"";
+  document.getElementById("h-tags").innerHTML=[{bg:"#0d2040",c:"#7eb8f7",t:d.exchange},{bg:"#0a1f0a",c:"#4ade80",t:d.sector},{bg:"#1a1000",c:"#fbbf24",t:d.industry}].filter(x=>x.t).map(x=>"<span class='tag' style='background:"+x.bg+";color:"+x.c+"'>"+x.t+"</span>").join("");
+  document.getElementById("h-price").textContent=val.currentPrice||"";
+  document.getElementById("h-ev").innerHTML="EV: <span style='color:var(--text)'>"+(val.enterpriseValue||"-")+"</span> · Mkt Cap: <span style='color:var(--text)'>"+(val.marketCap||"-")+"</span>";
+  document.getElementById("h-rating").innerHTML=a.rating?"<span class='rating-badge' style='background:"+rclr+"1a;color:"+rclr+";border:1px solid "+rclr+"44'>"+a.rating.toUpperCase()+" · PT "+(a.priceTarget||"-")+" · "+(a.impliedUpside||"")+"</span>":"";
+  document.getElementById("panel-overview").innerHTML="<div class='card'><div class='card-title'>Company Description</div><div class='card-body'><p style='font-size:13px;line-height:1.8;margin-bottom:10px'>"+(ov.description||"")+"</p><p style='font-size:12px;color:#8090a0;margin-bottom:8px'><span style='color:var(--gray)'>Business Model: </span>"+(ov.businessModel||"")+"</p><p style='font-size:12px;color:#8090a0'><span style='color:var(--gray)'>Economic Moat: </span>"+(ov.moat||"")+"</p></div></div><div class='g2'><div class='card'><div class='card-title'>Key Information</div><div class='card-body'>"+[["CEO",ov.ceo],["Headquarters",ov.headquarters],["Founded",ov.founded],["Employees",ov.employees],["Exchange",d.exchange]].map(([k,v])=>"<div class='kv'><span class='kv-k'>"+k+"</span><span class='kv-v'>"+(v||"-")+"</span></div>").join("")+"</div></div><div class='card'><div class='card-title'>Products / Segments</div><div class='card-body'>"+(ov.keyProducts||[]).map(p=>"<div class='prod-item'><span style='color:var(--blue)'>></span><span>"+p+"</span></div>").join("")+"</div></div></div>"+(ov.geographicExposure?"<div class='card'><div class='card-title'>Geographic Exposure</div><div class='card-body'><div class='geo-grid'>"+Object.entries(ov.geographicExposure).map(([r,p])=>"<div class='geo-item'><div class='geo-hdr'><span style='color:var(--gray)'>"+r+"</span><span style='color:var(--lblue);font-weight:600'>"+p+"</span></div><div class='geo-bg'><div class='geo-fill' style='width:"+p+"'></div></div></div>").join("")+"</div></div></div>":"");
+  document.getElementById("panel-financials").innerHTML=[["Income Statement",fin.incomeStatement],["Balance Sheet",fin.balanceSheet],["Cash Flow Statement",fin.cashFlow]].filter(([,t])=>t).map(([title,t])=>"<div class='card card-nop'><div class='card-title'>"+title+"</div><div class='card-body'>"+tbl(t.headers||[],t.rows||[])+"</div></div>").join("");
+  document.getElementById("panel-valuation").innerHTML="<div class='g4'>"+[["Market Cap",val.marketCap],["Enterprise Value",val.enterpriseValue],["52W Range",val.fiftyTwoWeekRange],["Beta / Div Yield",(val.beta||"-")+" / "+(val.dividendYield||"-")]].map(([k,v])=>"<div class='stat-box'><div class='stat-label'>"+k+"</div><div class='stat-value'>"+(v||"-")+"</div></div>").join("")+"</div>"+(val.metrics?"<div class='card card-nop'><div class='card-title'>Valuation Multiples</div><div class='card-body'>"+tbl(val.metrics.headers||[],val.metrics.rows||[])+"</div></div>":"");
+  const pr=comps.impliedPriceRange||{};
+  document.getElementById("panel-comparables").innerHTML="<div class='card card-nop'><div class='card-title'>Comparable Company Analysis</div><div style='padding:10px 20px;border-bottom:1px solid var(--border);font-size:11px;color:var(--gray)'>"+(comps.description||"")+"</div><div class='card-body'>"+tbl(comps.headers||[],comps.peers||[])+"</div></div><div class='card'><div class='card-title'>Implied Price Range</div><div class='card-body'><div class='g3'>"+[["Bear/Low",pr.low,"#ef4444"],["Base/Mid",pr.mid,"#f59e0b"],["Bull/High",pr.high,"#10b981"]].map(([l,v,c])=>"<div style='text-align:center;padding:16px;background:var(--bg1);border-radius:4px;border:1px solid "+c+"22'><div style='font-size:10px;color:var(--gray)'>"+l+"</div><div style='font-size:22px;font-weight:700;color:"+c+";margin-top:6px'>"+(v||"-")+"</div></div>").join("")+"</div></div></div>";
+  const assumptions=dcf.assumptions||{},summary=dcf.summary||{},sens=dcf.sensitivityTable||{};
+  let curP=0;try{curP=parseFloat((summary.currentPrice||"0").replace(/[$,]/g,""));}catch(e){}
+  document.getElementById("panel-dcf").innerHTML="<div class='g2'><div class='card'><div class='card-title'>Key Assumptions</div><div class='card-body'>"+[["WACC",assumptions.wacc],["Terminal Growth Rate",assumptions.terminalGrowthRate],["Tax Rate",assumptions.taxRate],["Projection Years",assumptions.projectionYears],["Base Revenue",assumptions.baseRevenue]].map(([k,v])=>"<div class='kv'><span class='kv-k'>"+k+"</span><span class='kv-v' style='color:var(--lblue)'>"+(v||"-")+"</span></div>").join("")+"</div></div><div class='card'><div class='card-title'>Growth & Margin Assumptions</div><div class='card-body'><div style='font-size:11px;color:var(--gray);margin-bottom:6px'>REVENUE GROWTH</div>"+(assumptions.revenueGrowthRates||[]).map(r=>"<div style='font-size:12px;padding:2px 0'>"+r+"</div>").join("")+"<div style='font-size:11px;color:var(--gray);margin:10px 0 6px'>EBITDA MARGINS</div>"+(assumptions.ebitdaMargins||[]).map(r=>"<div style='font-size:12px;padding:2px 0'>"+r+"</div>").join("")+"</div></div></div>"+(dcf.output?"<div class='card card-nop'><div class='card-title'>DCF Projection Model</div><div class='card-body'>"+tbl(dcf.output.headers||[],dcf.output.rows||[])+"</div></div>":"")+"<div class='g2'><div class='card'><div class='card-title'>Valuation Bridge</div><div class='card-body'>"+Object.entries(summary).map(([k,v])=>{const lbl=k.replace(/([A-Z])/g," $1").trim().replace(/^./,c=>c.toUpperCase());const isKey=k.includes("implied")||k.toLowerCase().includes("upside");return"<div class='kv'><span class='kv-k'>"+lbl+"</span><span class='kv-v' style='color:"+(isKey?"var(--green)":"var(--text)")+";font-size:"+(isKey?"14px":"12px")+"'>"+(v||"-")+"</span></div>";}).join("")+"</div></div><div class='card'><div class='card-title'>Sensitivity Table</div><div class='card-body'><div style='overflow-x:auto'><table class='st'><thead><tr><th>TGR/WACC</th>"+(sens.waccRates||[]).map(w=>"<th>"+w+"</th>").join("")+"</tr></thead><tbody>"+(sens.tgrRates||[]).map((tgr,ri)=>"<tr><th>"+tgr+"</th>"+((sens.matrix||[])[ri]||[]).map(cell=>{let n=parseFloat((cell||"").replace(/[$,]/g,""));return"<td class='"+((!isNaN(n)&&n>curP)?"su":"sd")+"'>"+(cell||"-")+"</td>";}).join("")+"</tr>").join("")+"</tbody></table></div></div></div></div>";
+  document.getElementById("panel-risks").innerHTML="<div class='g3'>"+[["Bull Case",risks.bullCase,"var(--green)"],["Base Case",risks.baseCase,"var(--yellow)"],["Bear Case",risks.bearCase,"var(--red)"]].map(([lbl,c,clr])=>c?"<div class='case-box' style='background:var(--bg2);border:1px solid "+clr+"33'><div style='font-size:11px;color:"+clr+";font-weight:700;margin-bottom:10px'>"+lbl+"</div><div style='font-size:22px;font-weight:700;color:"+clr+";margin-bottom:4px'>"+(c.priceTarget||"-")+"</div><div style='font-size:11px;color:var(--gray);margin-bottom:12px'>"+(c.upside||c.downside||"")+"</div>"+(c.catalysts||c.risks||[]).map(i=>"<div style='font-size:11px;color:#8090a0;padding:3px 0;border-bottom:1px solid var(--alt)'>"+i+"</div>").join("")+(c.rationale?"<div style='font-size:11px;color:#8090a0;margin-top:8px'>"+c.rationale+"</div>":"")+"</div>":"").join("")+"</div><div class='card'><div class='card-title'>Key Risk Register</div><div class='card-body'>"+(risks.keyRisks||[]).map(r=>"<div class='risk-row'><span class='sev' style='background:"+sc(r.severity)+"1a;color:"+sc(r.severity)+";border:1px solid "+sc(r.severity)+"33'>"+r.severity.toUpperCase()+"</span><div><div style='font-size:11px;color:var(--gray);margin-bottom:2px'>"+(r.category||"")+"</div><div style='font-size:12px'>"+(r.risk||"")+"</div></div></div>").join("")+"</div></div>";
+  const cons=a.consensusRatings||{};
+  document.getElementById("panel-analyst").innerHTML="<div class='g2'><div class='card'><div class='card-title'>Investment Thesis</div><div class='card-body'><p style='font-size:13px;line-height:1.8;margin-bottom:16px'>"+(a.investmentThesis||"")+"</p><div style='font-size:11px;color:var(--gray);margin-bottom:8px'>KEY METRICS TO WATCH</div>"+(a.keyMetricsToWatch||[]).map(m=>"<div style='font-size:12px;color:var(--lblue);padding:3px 0'>> "+m+"</div>").join("")+"<div style='font-size:11px;color:var(--gray);margin:12px 0 8px'>CATALYSTS</div>"+(a.catalysts||[]).map(c=>"<div style='font-size:12px;color:var(--green);padding:3px 0'>> "+c+"</div>").join("")+"</div></div><div><div class='card'><div class='card-title'>Our Rating</div><div class='card-body' style='text-align:center;padding:20px'><div style='font-size:28px;font-weight:700;color:"+rclr+"'>"+(a.rating||"").toUpperCase()+"</div><div style='font-size:22px;color:#fff;font-weight:600;margin-top:6px'>"+(a.priceTarget||"-")+"</div><div style='font-size:11px;color:"+rclr+";margin-top:4px'>"+(a.impliedUpside||"")+" implied upside</div></div></div><div class='card'><div class='card-title'>Street Consensus</div><div class='card-body'><div style='display:flex;gap:8px;margin-bottom:12px'>"+[["Buy",cons.buy,"var(--green)"],["Hold",cons.hold,"var(--yellow)"],["Sell",cons.sell,"var(--red)"]].map(([l,v,c])=>"<div class='cbox'><div class='cnum' style='color:"+c+"'>"+(v||"-")+"</div><div class='clbl'>"+l+"</div></div>").join("")+"</div><div class='kv'><span class='kv-k'>Consensus PT</span><span class='kv-v'>"+(a.consensusPriceTarget||"-")+"</span></div></div></div></div></div><div class='card'><div class='card-title'>Recent Developments</div><div class='card-body'>"+(a.recentDevelopments||[]).map(d=>"<div class='dev-item'><span style='color:var(--blue);flex-shrink:0'>></span>"+d+"</div>").join("")+"</div></div>";
+  document.getElementById("company-header").style.display="flex";
+  document.getElementById("tabs").style.display="flex";
+  document.getElementById("content").style.display="block";
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".section-panel").forEach(p=>p.classList.remove("active"));
+  document.querySelector(".tab[data-tab='overview']").classList.add("active");
+  document.getElementById("panel-overview").classList.add("active");
+}
+document.querySelectorAll(".tab").forEach(t=>{t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".section-panel").forEach(x=>x.classList.remove("active"));t.classList.add("active");document.getElementById("panel-"+t.dataset.tab).classList.add("active");});});
+window.addEventListener("load",()=>document.getElementById("api-modal").classList.add("show"));
+</script>
+</body>
+</html>
